@@ -1,6 +1,6 @@
 from array import array
 import datetime
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, SkipValidation
 
 class UserCreate(BaseModel):
@@ -59,4 +59,13 @@ class OrderOut(BaseModel):
 
     class Config:
         from_attributes = True  
+        
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+    
+
+class TokenData(BaseModel):
+    id: Optional[str] = None

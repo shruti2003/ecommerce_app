@@ -11,6 +11,8 @@ from app.schemas import schemas
 from app.models.order import Order
 from sqlalchemy.orm import Session
 
+from app.auth import auth
+
 
 router = APIRouter(
     prefix="/orders",
@@ -19,7 +21,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model = schemas.OrderOut)
-def createOrder(order: schemas.OrderCreate, db: Session = Depends(get_db)):
+def createOrder(order: schemas.OrderCreate, current_user: int= Depends(auth.get_current_user), db: Session = Depends(get_db)):
     try:
         total_price = 0.0
         for product in order.products: 
@@ -27,6 +29,7 @@ def createOrder(order: schemas.OrderCreate, db: Session = Depends(get_db)):
             total_price = val.price
 
         new_product = Order(
+            id = current_user.id,
             customer_name=order.customer_name,
             customer_email=order.customer_email, 
             products = order.products,
@@ -45,7 +48,7 @@ def createOrder(order: schemas.OrderCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.OrderOut)
-def get_order(id: int, db: Session = Depends(get_db)):
+def get_order(id: int, current_user: int = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     try:
         order = db.query(Order).filter(Order.id == id).first()
 
@@ -60,7 +63,7 @@ def get_order(id: int, db: Session = Depends(get_db)):
 # PUT /orders/{id} → Admin updates order status
 
 @router.put("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def update_product(id: int, updated_order: schemas.OrderCreate, db: Session = Depends(get_db)):
+def update_order(id: int,  updated_order: schemas.OrderCreate, current_user: int = Depends(auth.get_current_admin_user), db: Session = Depends(get_db)):
     try:
         order = db.query(Order).filter(Order.id == id)
         first_order = order.first()

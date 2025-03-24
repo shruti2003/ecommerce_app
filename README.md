@@ -84,8 +84,6 @@ Error Handling & Optimization (~10 mins)
 
 
 
-    - JWT token 
-    - api token 
-    - caching 
+
+    - caching  
     - api testing 
-    

@@ -13,15 +13,38 @@ router = APIRouter(
     prefix="/products",
     tags=["products"],
 )
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from app.models.product import Product
+from app.database.db import get_db
+from app.schemas import schemas
+
+router = APIRouter(
+    prefix="/products",
+    tags=["products"],
+)
 
 @router.get("/all", status_code=status.HTTP_200_OK)
-def get_products(db: Session = Depends(get_db)):
-    try: 
-        products = db.query(Product).all()
-        if products:
-            return products
-        else:
-            raise HTTPException(status_code=404, detail="products not found")
+def get_products(page: int = 1, size: int = 10, db: Session = Depends(get_db)):
+    try:
+        # Calculate offset and limit
+        offset = (page - 1) * size
+        products = db.query(Product).offset(offset).limit(size).all()
+
+        # Get the total count of products to calculate total pages
+        total_products = db.query(Product).count()
+        total_pages = (total_products + size - 1) // size  # This calculates the total number of pages
+
+        if not products:
+            raise HTTPException(status_code=404, detail="Products not found")
+
+        return {
+            "page": page,
+            "size": size,
+            "total_pages": total_pages,
+            "total_products": total_products,
+            "products": products
+        }
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=f"Invalid input: {str(e)}")
